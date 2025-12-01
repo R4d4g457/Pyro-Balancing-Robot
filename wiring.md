@@ -1,10 +1,25 @@
+# RaspberryPi setup:
+
+- Flash MicroSD card with `Raspberry Pi OS (Legacy, 32-bit) Lite` 
+“A port of Debian Bookworm with security updates and no desktop environment”
+- Add `wpa_supplicant.conf` with WiFi network details via MicroSD card
+- Confirm `$ ssh pyro@pyro.local` works
+- `scp requirements.txt pyro@pyro.local:`
+- Py: `sudo apt-get install pip`
+- Py: `python3 -m venv venv`
+- Py: `. venv/bin/activate`
+- Py: `pip install -r requirements.txt`
+- Py `sudo raspi-config` --
+Interface Options → I2C → Enable, then reboot), or edit `/boot/config.txt` and ensure `dtparam=i2c_arm=on` is present. (otherwise you get `Make sure I2C is enabled` errors)
+
+
 # Files to copy to RaspberryPi:
 
-- main.py
-- controller.py
-- imu.py
-- robotKinematics.py
-- requirements.txt
+- `main.py`
+- `controller.py`
+- `imu.py`
+- `robotKinematics.py`
+- `requirements.txt` (as above)
 
 
 # Expected wiring

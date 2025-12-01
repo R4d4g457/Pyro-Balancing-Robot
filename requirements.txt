@@ -3,6 +3,4 @@ adafruit-circuitpython-servokit
 flask
 flask-cors
 numpy
-PyQt5
-pyqtgraph
 smbus2
