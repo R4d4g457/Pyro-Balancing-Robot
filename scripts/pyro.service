@@ -1,0 +1,16 @@
+[Unit]
+Description=Pyro Robot Controller
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pyro
+WorkingDirectory=/home/pyro/pyro
+Environment=REPO_DIR=/home/pyro/pyro
+Environment=VENV_PATH=/home/pyro/venv
+ExecStart=/home/pyro/pyro/scripts/start_pyro.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

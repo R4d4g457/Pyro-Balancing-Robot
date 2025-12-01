@@ -14,6 +14,20 @@ Interface Options → I2C → Enable, then reboot), or edit `/boot/config.txt` a
 - Py: `sudo apt install -y i2c-tools` for `i2cdetect`
 
 
+## Auto-start on boot (pyro service)
+
+- Copy `scripts/start_pyro.sh` and `scripts/pyro.service` to the Pi with the rest of the repo.
+- Edit the paths inside both files if your user, repo directory, or virtual environment differs from the defaults (`/home/pyro/pyro` and `/home/pyro/venv`).
+- On the Pi:
+  - `sudo cp scripts/pyro.service /etc/systemd/system/pyro.service`
+  - `sudo systemctl daemon-reload`
+  - `sudo systemctl enable pyro.service`
+  - `sudo systemctl start pyro.service` (or reboot)
+  - Tail logs with `journalctl -u pyro.service -f`
+
+`start_pyro.sh` activates `~/venv`, changes into the repo directory, and runs `python3 main.py`. The systemd unit ensures it starts at boot and restarts on failure.
+
+
 # Files to copy to RaspberryPi:
 
 - `main.py`
