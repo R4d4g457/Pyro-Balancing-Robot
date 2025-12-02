@@ -97,8 +97,13 @@ Use the offsets in `RobotController.set_motor_angles` (lines 54–60) to level t
 
 ## IMU alignment check
 
-1. Run the controller with debug logs: `TILT_DEBUG=1 python3 main.py` (stop the service first).
-2. Gently pitch the platform forward/back and observe the printed `pitch`/`roll` values. They should match the physical axes; if inverted, swap signs in `TiltController.update` (lines 154–155) or rotate the MPU6050 board.
-3. Once axes match, re-enable the service with `scripts/restart_pyro.sh`.
+1. Run the controller with debug logs: `TILT_DEBUG=1 PYRO_AXIS_ROT_DEG=0 python3 main.py` (stop the service first).
+2. Gently pitch the platform forward/back and observe the printed `raw` vs `rot` values.
+3. Adjust environment variables and rerun until the axes line up:
+   - `PYRO_AXIS_ROT_DEG=…` rotates the IMU frame around the vertical axis (positive values rotate clockwise when looking down). Start with ±30° increments until the response aligns with the platform.
+   - `PYRO_INVERT_PITCH=1` or `PYRO_INVERT_ROLL=1` flips individual axes if they run backwards.
+   - `PYRO_PITCH_GAIN=…` / `PYRO_ROLL_GAIN=…` scale how aggressively each axis feeds into the PID (use values >1.0 for more correction if the motion feels weak, <1.0 if it overshoots).
+4. Once satisfied, add the chosen variables to `scripts/pyro.service` as extra `Environment=` lines so the service uses the same calibration (e.g. `Environment=PYRO_AXIS_ROT_DEG=15`).
+5. Re-enable the service with `scripts/restart_pyro.sh`.
 
 Document your final clamp limits and offsets in `controller.py` (with comments) so future rebuilds use the calibrated values.

@@ -120,7 +120,16 @@ class TiltController:
     Servo objects come from original RobotController.
     """
 
-    def __init__(self, robot_controller, debug=False):
+    def __init__(
+        self,
+        robot_controller,
+        debug=False,
+        axis_rotation_deg=0.0,
+        invert_pitch=False,
+        invert_roll=False,
+        pitch_gain=1.0,
+        roll_gain=1.0,
+    ):
         self.robot = robot_controller
         self.s1 = self.robot.s1
         self.s2 = self.robot.s2
@@ -134,6 +143,24 @@ class TiltController:
 
         self.last_time = time.time()
         self.debug = debug
+        self.axis_rotation_rad = math.radians(axis_rotation_deg)
+        self.axis_cos = math.cos(self.axis_rotation_rad)
+        self.axis_sin = math.sin(self.axis_rotation_rad)
+        self.invert_pitch = invert_pitch
+        self.invert_roll = invert_roll
+        self.pitch_gain = pitch_gain
+        self.roll_gain = roll_gain
+
+    def _transform_axes(self, pitch, roll):
+        rotated_pitch = pitch * self.axis_cos - roll * self.axis_sin
+        rotated_roll = pitch * self.axis_sin + roll * self.axis_cos
+        if self.invert_pitch:
+            rotated_pitch = -rotated_pitch
+        if self.invert_roll:
+            rotated_roll = -rotated_roll
+        rotated_pitch *= self.pitch_gain
+        rotated_roll *= self.roll_gain
+        return rotated_pitch, rotated_roll
 
     def update(self):
         """
@@ -144,7 +171,8 @@ class TiltController:
         self.last_time = t
 
         # Read pitch/roll directly from IMU
-        pitch, roll = self.imu.read()
+        raw_pitch, raw_roll = self.imu.read()
+        pitch, roll = self._transform_axes(raw_pitch, raw_roll)
 
         # Compute PID corrections
         corr_x = self.pid_x.update(-pitch, dt)
@@ -160,8 +188,9 @@ class TiltController:
 
         if self.debug:
             print(
-                f"IMU pitch={pitch:+6.2f} roll={roll:+6.2f} | "
-                f"PID corr_x={corr_x:+6.2f} corr_y={corr_y:+6.2f} | "
+                f"raw=({raw_pitch:+6.2f}, {raw_roll:+6.2f}) "
+                f"rot=({pitch:+6.2f}, {roll:+6.2f}) | "
+                f"PID=({corr_x:+6.2f}, {corr_y:+6.2f}) | "
                 f"servos=({theta1:5.1f}, {theta2:5.1f}, {theta3:5.1f})",
                 flush=True,
             )
