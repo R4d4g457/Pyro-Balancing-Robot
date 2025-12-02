@@ -27,6 +27,14 @@ Interface Options → I2C → Enable, then reboot), or edit `/boot/config.txt` a
 
 `start_pyro.sh` activates `~/venv`, changes into the repo directory, and runs `python3 main.py`. The systemd unit ensures it starts at boot and restarts on failure.
 
+### Updating code & restarting the service
+
+1. Copy new files (or `git pull`) into `/home/pyro/pyro`.
+2. Run `scripts/restart_pyro.sh` from that directory (it calls `sudo systemctl daemon-reload && sudo systemctl restart pyro.service` and prints the status). You can also run the commands manually if you prefer.
+3. Tail logs with `sudo journalctl -u pyro.service -f` to confirm the controller is healthy.
+
+> `scripts/restart_pyro.sh` needs sudo privileges; run it from the Pi or via SSH as the `pyro` user.
+
 
 # Files to copy to RaspberryPi:
 
@@ -57,3 +65,40 @@ Interface Options → I2C → Enable, then reboot), or edit `/boot/config.txt` a
 
 Notes
 - With these connections the current code can initialize `ServoKit`, read the MPU6050 on I2C bus 1, and drive the three servos without further pin configuration.
+
+
+# Calibration checklist
+
+## Servo travel limits
+
+The `clamp()` helper inside `controller.py` (lines 13–15) constrains every command to 19–90°. Adjust these bounds if your hardware safely supports a wider range. To verify the extremes:
+
+1. Stop the pyro service (`sudo systemctl stop pyro.service`).
+2. Run a quick manual sweep:
+   ```bash
+   python3 - <<'PY'
+   from controller import RobotController
+   import time
+   rc = RobotController()
+   for angle in (20, 30, 40, 60, 80, 90):
+       print("Moving to", angle)
+       rc.set_motor_angles(angle, angle, angle)
+       time.sleep(2)
+   PY
+   ```
+3. Update the clamp range if the servos can move farther, or tighten it if they bind.
+
+## Servo offsets / level plate
+
+Use the offsets in `RobotController.set_motor_angles` (lines 54–60) to level the top plate:
+
+1. Temporarily edit the offsets tuple (e.g. `servo_offsets=(+2.0, -1.5, 0.0)`).
+2. Restart the service (or re-run the manual script) and observe the plate. Repeat until the top plate is level and the ball stays put when idle.
+
+## IMU alignment check
+
+1. Run the controller with debug logs: `TILT_DEBUG=1 python3 main.py` (stop the service first).
+2. Gently pitch the platform forward/back and observe the printed `pitch`/`roll` values. They should match the physical axes; if inverted, swap signs in `TiltController.update` (lines 154–155) or rotate the MPU6050 board.
+3. Once axes match, re-enable the service with `scripts/restart_pyro.sh`.
+
+Document your final clamp limits and offsets in `controller.py` (with comments) so future rebuilds use the calibrated values.
