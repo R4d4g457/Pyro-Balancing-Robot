@@ -129,20 +129,26 @@ class TiltController:
         invert_roll=False,
         pitch_gain=1.0,
         roll_gain=1.0,
+        pid_kp=0.9,
+        pid_ki=0.0,
+        pid_kd=0.03,
+        pid_max_out=15.0,
+        output_gain=1.0,
     ):
         self.robot = robot_controller
         self.s1 = self.robot.s1
         self.s2 = self.robot.s2
         self.s3 = self.robot.s3
 
-        self.pid_x = PID(0.9, 0.0, 0.03)
-        self.pid_y = PID(0.9, 0.0, 0.03)
+        self.pid_x = PID(pid_kp, pid_ki, pid_kd, max_out=pid_max_out)
+        self.pid_y = PID(pid_kp, pid_ki, pid_kd, max_out=pid_max_out)
 
         # Instantiate MPU6050 here
         self.imu = MPU6050()
 
         self.last_time = time.time()
         self.debug = debug
+        self.output_gain = output_gain
         self.axis_rotation_rad = math.radians(axis_rotation_deg)
         self.axis_cos = math.cos(self.axis_rotation_rad)
         self.axis_sin = math.sin(self.axis_rotation_rad)
@@ -175,8 +181,8 @@ class TiltController:
         pitch, roll = self._transform_axes(raw_pitch, raw_roll)
 
         # Compute PID corrections
-        corr_x = self.pid_x.update(-pitch, dt)
-        corr_y = self.pid_y.update(-roll, dt)
+        corr_x = self.output_gain * self.pid_x.update(-pitch, dt)
+        corr_y = self.output_gain * self.pid_y.update(-roll, dt)
 
         # Map to servo angles
         theta1, theta2, theta3 = rk.tilt_to_servos(corr_x, corr_y)

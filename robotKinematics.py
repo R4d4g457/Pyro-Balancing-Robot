@@ -42,6 +42,10 @@ def tilt_to_servos(tilt_x_deg, tilt_y_deg):
 
     nx = math.sin(tx)
     ny = math.sin(ty)
-    nz = math.sqrt(max(0.0, 1 - nx * nx - ny * ny))
+    nz_sq = max(0.0, 1 - nx * nx - ny * ny)
+    nz = math.sqrt(nz_sq)
+    if nz < 1e-3:
+        # Prevent numerical blow-ups when the requested tilt exceeds the kinematic limit
+        nz = 1e-3
 
     return inverseKinematics(nx, ny, nz)

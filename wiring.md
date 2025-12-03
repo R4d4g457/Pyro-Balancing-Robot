@@ -103,7 +103,9 @@ Use the offsets in `RobotController.set_motor_angles` (lines 54–60) to level t
    - `PYRO_AXIS_ROT_DEG=…` rotates the IMU frame around the vertical axis (positive values rotate clockwise when looking down). Start with ±30° increments until the response aligns with the platform.
    - `PYRO_INVERT_PITCH=1` or `PYRO_INVERT_ROLL=1` flips individual axes if they run backwards.
    - `PYRO_PITCH_GAIN=…` / `PYRO_ROLL_GAIN=…` scale how aggressively each axis feeds into the PID (use values >1.0 for more correction if the motion feels weak, <1.0 if it overshoots).
-4. Once satisfied, add the chosen variables to `scripts/pyro.service` as extra `Environment=` lines so the service uses the same calibration (e.g. `Environment=PYRO_AXIS_ROT_DEG=15`).
+   - `PYRO_PID_KP`, `PYRO_PID_KI`, `PYRO_PID_KD` change the PID controller gains; `PYRO_PID_MAX_OUT` raises/lowers the saturation limit (degrees) before commands feed the kinematics.
+   - `PYRO_OUTPUT_GAIN` multiplies the PID outputs before converting to servo angles if you need stronger motion without altering PID dynamics.
+4. Once satisfied, add the chosen variables to `scripts/pyro.service` as extra `Environment=` lines so the service uses the same calibration (e.g. `Environment=PYRO_AXIS_ROT_DEG=15`, `Environment=PYRO_OUTPUT_GAIN=1.3`).
 5. Re-enable the service with `scripts/restart_pyro.sh`.
 
 Document your final clamp limits and offsets in `controller.py` (with comments) so future rebuilds use the calibrated values.
