@@ -10,7 +10,7 @@ except ImportError:  # pragma: no cover - hardware dependency
     ServoKit = None
 
 
-def clamp(value, lower=19, upper=90):
+def clamp(value, lower=19, upper=89):
     """Clamp servo angles to the physically safe motion range."""
     return max(lower, min(value, upper))
 
