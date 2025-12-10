@@ -47,6 +47,19 @@ def env_bool(name, default=False):
     return value.strip().lower() in ("1", "true", "yes", "on")
 
 
+def env_vector(name):
+    value = os.environ.get(name)
+    if not value:
+        return None
+    try:
+        parts = [float(part.strip()) for part in value.split(",")]
+        if len(parts) != 2:
+            return None
+        return tuple(parts)
+    except ValueError:
+        return None
+
+
 # pylint: disable=too-many-locals
 def run():
     loop_hz = env_float("LEGACY_LOOP_HZ", 100.0)
@@ -61,10 +74,56 @@ def run():
     invert_roll = env_bool("LEGACY_INVERT_ROLL", False)
     pitch_offset = env_float("LEGACY_PITCH_OFFSET", 0.0)
     roll_offset = env_float("LEGACY_ROLL_OFFSET", 0.0)
+    cal_a = env_vector("LEGACY_CAL_A")
+    cal_b = env_vector("LEGACY_CAL_B")
+    cal_c = env_vector("LEGACY_CAL_C")
+    cal_targets = {
+        "A": env_float("LEGACY_CAL_A_TARGET_DEG", 300.0),
+        "B": env_float("LEGACY_CAL_B_TARGET_DEG", 60.0),
+        "C": env_float("LEGACY_CAL_C_TARGET_DEG", 180.0),
+    }
 
     axis_rot_rad = math.radians(axis_rot_deg)
     axis_cos = math.cos(axis_rot_rad)
     axis_sin = math.sin(axis_rot_rad)
+
+    calibrated_matrix = None
+    calibration_vectors = []
+    for name, meas in (("A", cal_a), ("B", cal_b), ("C", cal_c)):
+        if meas is None:
+            continue
+        target_phi = math.radians(cal_targets[name])
+        target_vec = (math.cos(target_phi), math.sin(target_phi))
+        calibration_vectors.append((meas, target_vec))
+
+    if len(calibration_vectors) >= 2:
+        vv00 = vv01 = vv11 = 0.0
+        tv00 = tv01 = tv10 = tv11 = 0.0
+        for (vx, vy), (tx, ty) in calibration_vectors:
+            vv00 += vx * vx
+            vv01 += vx * vy
+            vv11 += vy * vy
+            tv00 += tx * vx
+            tv01 += tx * vy
+            tv10 += ty * vx
+            tv11 += ty * vy
+
+        det = vv00 * vv11 - vv01 * vv01
+        if abs(det) > 1e-9:
+            inv00 = vv11 / det
+            inv01 = -vv01 / det
+            inv11 = vv00 / det
+            inv10 = inv01  # symmetric
+            calibrated_matrix = (
+                (
+                    tv00 * inv00 + tv01 * inv10,
+                    tv00 * inv01 + tv01 * inv11,
+                ),
+                (
+                    tv10 * inv00 + tv11 * inv10,
+                    tv10 * inv01 + tv11 * inv11,
+                ),
+            )
 
     model = RobotKinematics()
     robot = LegacyRobotController(model, model.lp, model.l1, model.l2, model.lb)
@@ -85,8 +144,12 @@ def run():
         if invert_roll:
             roll = -roll
 
-        rot_pitch = pitch * axis_cos - roll * axis_sin
-        rot_roll = pitch * axis_sin + roll * axis_cos
+        if calibrated_matrix:
+            rot_pitch = calibrated_matrix[0][0] * pitch + calibrated_matrix[0][1] * roll
+            rot_roll = calibrated_matrix[1][0] * pitch + calibrated_matrix[1][1] * roll
+        else:
+            rot_pitch = pitch * axis_cos - roll * axis_sin
+            rot_roll = pitch * axis_sin + roll * axis_cos
 
         pitch = rot_pitch
         roll = rot_roll

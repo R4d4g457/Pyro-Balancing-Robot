@@ -65,6 +65,7 @@ Additional helpers:
 
 - `LEGACY_AXIS_ROT_DEG`, `LEGACY_INVERT_PITCH`, `LEGACY_INVERT_ROLL` align the IMU frame with the servo geometry.
 - `LEGACY_PITCH_OFFSET`, `LEGACY_ROLL_OFFSET` remove static bias before the PID runs.
+- `LEGACY_CAL_A`, `LEGACY_CAL_B`, `LEGACY_CAL_C` let you supply measured `(pitch,roll)` pairs for each servo direction (comma-separated) and the code will solve for the best 2×2 transform that maps them to the desired axes (defaults: A→300°, B→60°, C→180°; override with `LEGACY_CAL_*_TARGET_DEG`).
 - `LEGACY_DEBUG=1` prints raw vs rotated IMU, PID corrections, and commanded spherical angles.
 
 This provides a clean baseline for comparing the more feature-rich IMU controller in `main.py`.
