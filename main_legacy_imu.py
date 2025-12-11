@@ -131,7 +131,7 @@ def run():
             )
 
     model = RobotKinematics()
-    robot = LegacyRobotController(model, model.lp, model.l1, model.l2, model.lb)
+    robot = LegacyRobotController(model, model.lp, model.l1, model.l2, model.lb, debug=debug)
     imu = MPU6050()
 
     pid_x = AxisPID(kp, ki, kd, max_tilt)

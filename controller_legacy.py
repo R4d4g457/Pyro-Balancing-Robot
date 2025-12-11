@@ -10,7 +10,7 @@ def clamp(value, lower=19, upper=90):
 
 
 class LegacyRobotController:
-    def __init__(self, model, lp=7.125, l1=6.20, l2=4.50, lb=4.00):
+    def __init__(self, model, lp=7.125, l1=6.20, l2=4.50, lb=4.00, debug=False):
         self.robot = model
 
         self.Controller = ServoKit(channels=16)
@@ -37,6 +37,8 @@ class LegacyRobotController:
         self.s1.angle = clamp(theta1) - 4
         self.s2.angle = clamp(theta2)
         self.s3.angle = clamp(theta3)
+        if self.debug:
+            print(f"Set angles: {self.s1.angle}, {self.s2.angle}, {self.s3.angle}")
 
     def interpolate_time(self, target_angles, steps=100, duration=0.3, individual_durations=None):
         current_angles = [self.s1.angle, self.s2.angle, self.s3.angle]
@@ -53,17 +55,13 @@ class LegacyRobotController:
             self.set_motor_angles(*angles)
             time.sleep(max_duration / steps)
 
-    def Goto_time_spherical(self, theta, phi, h, t=0.5, debug=False):
+    def Goto_time_spherical(self, theta, phi, h, t=0.5):
         self.robot.solve_inverse_kinematics_spherical(theta, phi, h)
         target_angles = [
             math.degrees(math.pi * 0.5 - self.robot.theta1),
             math.degrees(math.pi * 0.5 - self.robot.theta2),
             math.degrees(math.pi * 0.5 - self.robot.theta3),
         ]
-        if debug:
-            print(
-                f"angles=({target_angles[0]:.2f}, {target_angles[1]:.2f}, {target_angles[2]:.2f})"
-            )
         self.interpolate_time(target_angles, duration=t)
 
     def Goto_N_time_spherical(self, theta, phi, h):
