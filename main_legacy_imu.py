@@ -60,6 +60,16 @@ def env_vector(name):
         return None
 
 
+def env_float_optional(name):
+    value = os.environ.get(name)
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
 # pylint: disable=too-many-locals
 def run():
     loop_hz = env_float("LEGACY_LOOP_HZ", 100.0)
@@ -82,6 +92,8 @@ def run():
         "B": env_float("LEGACY_CAL_B_TARGET_DEG", 60.0),
         "C": env_float("LEGACY_CAL_C_TARGET_DEG", 180.0),
     }
+    pitch_alpha_env = env_float_optional("LEGACY_PITCH_ALPHA")
+    roll_alpha_env = env_float_optional("LEGACY_ROLL_ALPHA")
 
     axis_rot_rad = math.radians(axis_rot_deg)
     axis_cos = math.cos(axis_rot_rad)
@@ -132,7 +144,12 @@ def run():
 
     model = RobotKinematics()
     robot = LegacyRobotController(model, model.lp, model.l1, model.l2, model.lb, debug=debug)
-    imu = MPU6050()
+    imu_kwargs = {}
+    if pitch_alpha_env is not None:
+        imu_kwargs["alpha_pitch"] = pitch_alpha_env
+    if roll_alpha_env is not None:
+        imu_kwargs["alpha_roll"] = roll_alpha_env
+    imu = MPU6050(**imu_kwargs)
 
     pid_x = AxisPID(kp, ki, kd, max_tilt)
     pid_y = AxisPID(kp, ki, kd, max_tilt)
