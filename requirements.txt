@@ -1,4 +1,5 @@
 adafruit-blinka
+adafruit-circuitpython-mpu6050
 adafruit-circuitpython-servokit
 flask
 flask-cors
