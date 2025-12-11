@@ -39,7 +39,7 @@ class LegacyRobotController:
         self.s2.angle = clamp(theta2)
         self.s3.angle = clamp(theta3)
         if self.debug:
-            print(f"Set angles: {self.s1.angle}, {self.s2.angle}, {self.s3.angle}")
+            print(f"Set angles: {self.s1.angle:+6.2f}, {self.s2.angle:+6.2f}, {self.s3.angle:+6.2f}")
 
     def interpolate_time(self, target_angles, steps=100, duration=0.3, individual_durations=None):
         current_angles = [self.s1.angle, self.s2.angle, self.s3.angle]

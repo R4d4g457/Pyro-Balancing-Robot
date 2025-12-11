@@ -173,6 +173,7 @@ def run():
                 f"| corr=({corr_x:+6.2f}, {corr_y:+6.2f}) "
                 f"-> theta={theta:5.2f} phi={phi:6.2f}",
                 flush=True,
+                end=' ',
             )
 
         robot.Goto_N_time_spherical(theta, phi, model.h)
