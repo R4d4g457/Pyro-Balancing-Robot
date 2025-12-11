@@ -97,6 +97,7 @@ def run():
     pitch_alpha_env = env_float_optional("PITCH_ALPHA")
     roll_alpha_env = env_float_optional("ROLL_ALPHA")
     ema_alpha = env_float_optional("OUTPUT_EMA_ALPHA")
+    deadband = env_float_optional("OUTPUT_DEADBAND")
 
     axis_rot_rad = math.radians(axis_rot_deg)
     axis_cos = math.cos(axis_rot_rad)
@@ -190,6 +191,12 @@ def run():
                 ema_x = ema_alpha * ema_x + (1.0 - ema_alpha) * corr_x
                 ema_y = ema_alpha * ema_y + (1.0 - ema_alpha) * corr_y
             corr_x, corr_y = ema_x, ema_y
+
+        if deadband is not None:
+            if abs(corr_x) < deadband:
+                corr_x = 0.0
+            if abs(corr_y) < deadband:
+                corr_y = 0.0
 
         magnitude = math.sqrt(corr_x**2 + corr_y**2)
         theta = min(max_tilt, magnitude)
