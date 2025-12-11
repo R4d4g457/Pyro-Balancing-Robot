@@ -12,6 +12,7 @@ def clamp(value, lower=19, upper=90):
 class LegacyRobotController:
     def __init__(self, model, lp=7.125, l1=6.20, l2=4.50, lb=4.00, debug=False):
         self.robot = model
+        self.debug = debug
 
         self.Controller = ServoKit(channels=16)
         self.s1 = self.Controller.servo[13]
