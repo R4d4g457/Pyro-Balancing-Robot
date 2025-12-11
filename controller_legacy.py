@@ -16,9 +16,8 @@ class LegacyRobotController:
 
         self.Controller = ServoKit(channels=16)
         self.s1 = self.Controller.servo[13]
-        # Swap channels so logical servo B (s2) matches physical wiring.
-        self.s2 = self.Controller.servo[14]
-        self.s3 = self.Controller.servo[15]
+        self.s2 = self.Controller.servo[15]
+        self.s3 = self.Controller.servo[14]
 
         for servo in (self.s1, self.s2, self.s3):
             servo.actuation_range = 270
