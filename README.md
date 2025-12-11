@@ -62,6 +62,7 @@ Key environment variables you can tune (and set in the systemd service):
 - `PITCH_OFFSET`, `ROLL_OFFSET` – remove static bias from the IMU readings.
 - `CAL_A`, `CAL_B`, `CAL_C` – provide measured `(pitch,roll)` readings (comma-separated) for each servo direction; the code solves for the best 2×2 transform to align the axes. Override the targets with `CAL_*_TARGET_DEG` if your servo layout differs.
 - `PITCH_ALPHA`, `ROLL_ALPHA` – per-axis complementary filter weighting; lower values trust the accelerometer more.
+- `OUTPUT_EMA_ALPHA` – optional smoothing factor (0–1) applied to the PID corrections before converting to servo angles (higher values smooth more).
 - `DEBUG=1` – prints raw vs rotated IMU values, PID corrections, and commanded spherical angles for live tuning.
 ---
 

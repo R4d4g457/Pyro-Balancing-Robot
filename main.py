@@ -96,6 +96,7 @@ def run():
     }
     pitch_alpha_env = env_float_optional("PITCH_ALPHA")
     roll_alpha_env = env_float_optional("ROLL_ALPHA")
+    ema_alpha = env_float_optional("OUTPUT_EMA_ALPHA")
 
     axis_rot_rad = math.radians(axis_rot_deg)
     axis_cos = math.cos(axis_rot_rad)
@@ -157,6 +158,7 @@ def run():
     pid_y = AxisPID(kp, ki, kd, max_tilt)
 
     time.sleep(1.0)
+    ema_x = ema_y = None
     while True:
         pitch, roll = imu.read()
         raw_pitch, raw_roll = pitch, roll
@@ -180,6 +182,14 @@ def run():
 
         corr_x = pid_x.update(-pitch)
         corr_y = pid_y.update(-roll)
+
+        if ema_alpha is not None:
+            if ema_x is None:
+                ema_x, ema_y = corr_x, corr_y
+            else:
+                ema_x = ema_alpha * ema_x + (1.0 - ema_alpha) * corr_x
+                ema_y = ema_alpha * ema_y + (1.0 - ema_alpha) * corr_y
+            corr_x, corr_y = ema_x, ema_y
 
         magnitude = math.sqrt(corr_x**2 + corr_y**2)
         theta = min(max_tilt, magnitude)

@@ -93,7 +93,7 @@ Use the offsets in `RobotController.set_motor_angles` (lines 54–60) to level t
 
 1. Temporarily edit the offsets tuple (e.g. `servo_offsets=(+2.0, -1.5, 0.0)`).
 2. Restart the service (or re-run the manual script) and observe the plate. Repeat until the top plate is level and the ball stays put when idle.
-3. If you still need to bias the IMU-derived commands, use the complementary-filter alphas (`PITCH_ALPHA`, `ROLL_ALPHA`) rather than neutral blending.
+3. If you still need to bias or smooth the IMU-derived commands, use the complementary-filter alphas (`PITCH_ALPHA`, `ROLL_ALPHA`) and, if needed, the PID output EMA (`OUTPUT_EMA_ALPHA`) rather than neutral blending.
 4. Add the chosen values to `scripts/pyro.service` so they persist across reboots.
 
 ## IMU alignment check
@@ -105,7 +105,7 @@ Use the offsets in `RobotController.set_motor_angles` (lines 54–60) to level t
    - `INVERT_PITCH=1` or `INVERT_ROLL=1` flips individual axes if they run backwards.
    - `PITCH_OFFSET` / `ROLL_OFFSET` remove static bias (e.g. if level ground reads `+0/-4.5`, set the offsets to those numbers so the transformed values centre on zero).
    - `KP`, `KI`, `KD`, `MAX_TILT_DEG` adjust the PID response and tilt clamp.
-   - `PITCH_ALPHA`, `ROLL_ALPHA` adjust the complementary filter weighting per axis.
+   - `PITCH_ALPHA`, `ROLL_ALPHA` adjust the complementary filter weighting per axis; `OUTPUT_EMA_ALPHA` applies a low-pass filter to the PID outputs before commanding servos.
 4. Once satisfied, add the chosen variables to `scripts/pyro.service` as extra `Environment=` lines so the service uses the same calibration (e.g. `Environment=PITCH_ALPHA=0.65`).
 5. Re-enable the service with `scripts/restart_pyro.sh`.
 

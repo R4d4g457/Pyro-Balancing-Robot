@@ -9,6 +9,9 @@ User=pyro
 WorkingDirectory=/home/pyro/pyro
 Environment=REPO_DIR=/home/pyro/pyro
 Environment=VENV_PATH=/home/pyro/venv
+Environment=LOOP_HZ=150
+Environment=KD=0.05
+Environment=OUTPUT_EMA_ALPHA=0.8
 Environment=PITCH_ALPHA=0.65
 Environment=CAL_A=-4.76,2.95
 Environment=CAL_B=-4.42,-10.70
